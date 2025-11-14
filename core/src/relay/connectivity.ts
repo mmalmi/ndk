@@ -4,6 +4,7 @@ import { NDKEvent } from "../events/index.js";
 import { NDKKind } from "../events/kinds";
 import type { NDK, NDKNetDebug } from "../ndk/index.js";
 import type { NDKFilter } from "../subscription";
+import { Queue, yieldThread } from "../utils/queue.js";
 import type { NDKRelay, NDKRelayConnectionStats } from ".";
 import { NDKRelayStatus } from ".";
 import { NDKRelayKeepalive, probeRelayConnection } from "./keepalive";
@@ -52,6 +53,10 @@ export class NDKRelayConnectivity {
     private lastSleepCheck = Date.now();
     private lastMessageSent = Date.now();
     private wasIdle = false;
+
+    // Message queue for async processing
+    private incomingMessageQueue = new Queue<string>();
+    private queueRunning = false;
 
     constructor(ndkRelay: NDKRelay, ndk?: NDK) {
         this.ndkRelay = ndkRelay;
